@@ -1,4 +1,5 @@
 CREATE TYPE "public"."condition" AS ENUM('New', 'Used');--> statement-breakpoint
+CREATE TYPE "public"."role" AS ENUM('Auctioneer', 'Bidder', 'Super Admin');--> statement-breakpoint
 CREATE TABLE "auctions" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"title" text NOT NULL,
@@ -50,16 +51,17 @@ CREATE TABLE "users" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"user_name" varchar(40) NOT NULL,
 	"password" varchar(255) NOT NULL,
-	"email" varchar(255),
+	"email" varchar(255) NOT NULL,
 	"address" varchar(255),
-	"phone" varchar(11),
+	"phone" varchar(11) NOT NULL,
 	"profile_image_public_id" varchar(255) NOT NULL,
 	"profile_image_url" varchar(255) NOT NULL,
-	"payment_methods" json,
-	"role" varchar NOT NULL,
-	"unpaid_commission" integer DEFAULT 0,
-	"auctions_won" integer DEFAULT 0,
-	"money_spent" integer DEFAULT 0,
+	"payment_methods" jsonb DEFAULT '{}'::jsonb,
+	"role" "role" DEFAULT 'Bidder',
+	"unpaid_commission" numeric DEFAULT '0',
+	"auctions_won" numeric DEFAULT '0',
+	"money_spent" numeric DEFAULT '0',
+	"refresh_token" varchar(500),
 	"created_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint

@@ -4,13 +4,12 @@ import { CreateAuctionDto } from './dto/create-auction.dto';
 import { UpdateAuctionDto } from './dto/update-auction.dto';
 import { AuctionEntity } from './entities/auction.entity';
 import { auctions } from 'src/common/database/schema';
-import { db } from 'src/common/database/drizzle.client';
-import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DRIZZLE } from 'src/common/database/drizzle.module';
+import { DrizzleDB } from 'src/common/database/types/drizzle';
 
 @Injectable()
 export class AuctionService {
-  constructor(@Inject(DRIZZLE) private readonly db: NodePgDatabase) {}
+  constructor(@Inject(DRIZZLE) private readonly db: DrizzleDB) {} 
 
   private readonly logger = new Logger(AuctionService.name);
 
@@ -25,7 +24,7 @@ export class AuctionService {
   }
 
   async getAuctionById(id: number): Promise<AuctionEntity> {
-    const row = await db.query.auctions.findFirst({
+    const row = await this.db.query.auctions.findFirst({
       where: eq(auctions.id, id),
     });
 
@@ -56,4 +55,3 @@ export class AuctionService {
     return { message: 'Auction deleted successfully' };
   }
 }
-

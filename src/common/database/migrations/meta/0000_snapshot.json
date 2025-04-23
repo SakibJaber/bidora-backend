@@ -1,5 +1,5 @@
 {
-  "id": "d836122c-8888-4371-bedf-079dce48ceff",
+  "id": "7da72878-5ad0-479c-8e5e-8e2e6572905b",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -356,7 +356,7 @@
           "name": "email",
           "type": "varchar(255)",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "address": {
           "name": "address",
@@ -368,7 +368,7 @@
           "name": "phone",
           "type": "varchar(11)",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "profile_image_public_id": {
           "name": "profile_image_public_id",
@@ -384,36 +384,45 @@
         },
         "payment_methods": {
           "name": "payment_methods",
-          "type": "json",
+          "type": "jsonb",
           "primaryKey": false,
-          "notNull": false
+          "notNull": false,
+          "default": "'{}'::jsonb"
         },
         "role": {
           "name": "role",
-          "type": "varchar",
+          "type": "role",
+          "typeSchema": "public",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false,
+          "default": "'Bidder'"
         },
         "unpaid_commission": {
           "name": "unpaid_commission",
-          "type": "integer",
+          "type": "numeric",
           "primaryKey": false,
           "notNull": false,
-          "default": 0
+          "default": "'0'"
         },
         "auctions_won": {
           "name": "auctions_won",
-          "type": "integer",
+          "type": "numeric",
           "primaryKey": false,
           "notNull": false,
-          "default": 0
+          "default": "'0'"
         },
         "money_spent": {
           "name": "money_spent",
-          "type": "integer",
+          "type": "numeric",
           "primaryKey": false,
           "notNull": false,
-          "default": 0
+          "default": "'0'"
+        },
+        "refresh_token": {
+          "name": "refresh_token",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
         },
         "created_at": {
           "name": "created_at",
@@ -439,6 +448,15 @@
       "values": [
         "New",
         "Used"
+      ]
+    },
+    "public.role": {
+      "name": "role",
+      "schema": "public",
+      "values": [
+        "Auctioneer",
+        "Bidder",
+        "Super Admin"
       ]
     }
   },
