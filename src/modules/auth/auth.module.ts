@@ -14,9 +14,11 @@ import { DrizzleModule } from 'src/common/database/drizzle.module';
     DrizzleModule,
     JwtModule.register({
       global: true,
+      secret: process.env.JWT_SECRET,
     }),
   ],
   controllers: [AuthController],
   providers: [AuthService, UserService, JwtStrategy, RefreshStrategy],
 })
 export class AuthModule {}
+

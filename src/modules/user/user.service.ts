@@ -1,5 +1,12 @@
-import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  NotFoundException,
+  ParseIntPipe,
+  Query,
+} from '@nestjs/common';
+import { eq, desc, gt, sql } from 'drizzle-orm';
 import * as multer from 'multer';
 import { UserEntity } from './entities/user.entity';
 import { users } from 'src/common/database/schema/user.schema';
@@ -45,11 +52,28 @@ export class UserService {
     dto: UserProfileDto,
     image?: Express.Multer.File,
   ) {
-    // If image is provided, upload to Cloudinary
+    // Get the existing user first to check their role
+    const existingUser = await this.db.query.users.findFirst({
+      where: eq(users.id, id),
+    });
+
+    if (!existingUser) throw new NotFoundException('User not found');
+
+    // Restrict paymentMethods for Bidders
+    if (existingUser.role === 'Bidder') {
+      if (dto.paymentMethods) {
+        this.logger.warn(
+          `Bidder with ID ${id} tried to update payment methods`,
+        );
+      }
+      dto.paymentMethods = undefined;
+    }
+
+    // Upload image if provided
     if (image?.buffer) {
       const uploaded = await this.cloudinary.uploadFile(
         image,
-        'profile_photos', // uploaded folder
+        'profile_photos',
       );
       dto.profileImagePublicId = uploaded.public_id;
       dto.profileImageUrl = uploaded.secure_url;
@@ -58,9 +82,13 @@ export class UserService {
     const [updated] = await this.db
       .update(users)
       .set({
+        address: dto.address,
+        phone: dto.phone,
         profileImageUrl: dto.profileImageUrl,
         profileImagePublicId: dto.profileImagePublicId,
-      })
+        paymentMethods: dto.paymentMethods as any,
+        role: dto.role,
+      } as Partial<any>)
       .where(eq(users.id, id))
       .returning();
 
@@ -74,5 +102,18 @@ export class UserService {
     if (deleted.rowCount === 0) throw new NotFoundException('User not found');
 
     return { message: 'User deleted successfully' };
+  }
+
+  async fetchLeaderboard(limit: number) {
+    return this.db
+      .select({
+        id: users.id,
+        userName: users.userName,
+        profileImageUrl: users.profileImageUrl,
+        moneySpent: users.moneySpent,
+      })
+      .from(users)
+      .orderBy(desc(users.moneySpent))
+      .limit(limit);
   }
 }

@@ -18,7 +18,6 @@ import { DrizzleDB } from 'src/common/database/types/drizzle';
 import { RegisterDto } from './dto/register.dto';
 
 type User = typeof users.$inferSelect;
-// type CreateUser = typeof users.$inferInsert;
 
 @Injectable()
 export class AuthService {
@@ -51,8 +50,8 @@ export class AuthService {
 
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
-    const passwordMatch = await bcrypt.compare(dto.password, user.password);
-    if (!passwordMatch) throw new UnauthorizedException('Invalid credentials');
+    const isMatch = await bcrypt.compare(dto.password, user.password);
+    if (!isMatch) throw new UnauthorizedException('Invalid credentials');
 
     const tokens = await this.getTokens(user.id);
     await this.storeRefreshToken(user.id, tokens.refreshToken);
@@ -72,16 +71,37 @@ export class AuthService {
       where: eq(users.id, userId),
     });
 
-    if (!user || !user.refreshToken)
+    if (!user || !user.refreshToken) {
       throw new ForbiddenException('Access Denied');
+    }
 
     const isMatch = await bcrypt.compare(refreshToken, user.refreshToken);
     if (!isMatch) throw new ForbiddenException('Access Denied');
 
+    // Generate new tokens (both access and refresh)
     const tokens = await this.getTokens(user.id);
+
+    // Hash the new refresh token and store it
     await this.storeRefreshToken(user.id, tokens.refreshToken);
 
     return tokens;
+  }
+
+  async getUserIfRefreshTokenMatches(refreshToken: string, userId: number) {
+    const user = await this.db.query.users.findFirst({
+      where: eq(users.id, userId),
+    });
+
+    if (!user || !user.refreshToken) return null;
+
+    const isRefreshTokenMatching = await bcrypt.compare(
+      refreshToken,
+      user.refreshToken,
+    );
+
+    if (!isRefreshTokenMatching) return null;
+
+    return user;
   }
 
   async resetPassword(dto: ResetPasswordDto) {

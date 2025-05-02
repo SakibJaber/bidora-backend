@@ -7,6 +7,7 @@ import {
   boolean,
   pgEnum,
   text,
+
 } from 'drizzle-orm/pg-core';
 
 export const conditionEnum = pgEnum('condition', ['New', 'Used']);
@@ -19,8 +20,10 @@ export const auctions = pgTable('auctions', {
   category: varchar('category', { length: 100 }).notNull(),
   condition: conditionEnum('condition').notNull(),
   currentBid: integer('current_bid').default(0),
-  startTime: timestamp('start_time', { withTimezone: true }),
-  endTime: timestamp('end_time', { withTimezone: true }),
+  startTime: varchar('start_time', { length: 50 }).notNull(),
+  endTime: varchar('end_time', { length: 50 }).notNull(),
+  // startTime: timestamp('start_time', { withTimezone: true }),
+  // endTime: timestamp('end_time', { withTimezone: true }),
   imagePublicId: varchar('image_public_id', { length: 255 }).notNull(),
   imageUrl: varchar('image_url', { length: 255 }).notNull(),
   createdBy: integer('created_by').notNull(),
@@ -29,3 +32,6 @@ export const auctions = pgTable('auctions', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
+
+
+export type Auction = typeof auctions.$inferSelect;

@@ -6,6 +6,7 @@ import {
   timestamp,
   jsonb,
   pgEnum,
+  decimal,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 

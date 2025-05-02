@@ -6,8 +6,8 @@ export class AuctionEntity {
   category: string;
   condition: 'New' | 'Used';
   currentBid: number;
-  startTime: Date;
-  endTime: Date;
+  startTime: string;
+  endTime: string;
   imagePublicId: string;
   imageUrl: string;
   createdBy: number;

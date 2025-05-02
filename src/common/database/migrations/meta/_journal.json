@@ -8,6 +8,13 @@
       "when": 1745172629194,
       "tag": "0000_shiny_shiva",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1746121202980,
+      "tag": "0001_smart_loners",
+      "breakpoints": true
     }
   ]
 }
