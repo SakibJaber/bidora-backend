@@ -48,10 +48,21 @@ export class AuctionController {
     return this.auctionService.getAuctionById(id);
   }
 
-  // @Put(':id')
-  // update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateAuctionDto) {
-  //   return this.auctionService.updateAuction(id, dto);
-  // }
+  @UseGuards(JwtAuthGuard)
+  @Get('my/auctions')
+  getMyAuctionItems(@CurrentUser('sub') userId: number) {
+    return this.auctionService.getMyAuctionItems(userId);
+  }
+
+  @Get(':id/details')
+  getAuctionDetails(@Param('id', ParseIntPipe) id: number) {
+    return this.auctionService.getAuctionDetails(id);
+  }
+
+  @Put(':id')
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateAuctionDto) {
+    return this.auctionService.updateAuction(id, dto);
+  }
 
   @Delete(':id')
   delete(@Param('id', ParseIntPipe) id: number) {

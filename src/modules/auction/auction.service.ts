@@ -10,7 +10,7 @@ import { eq, gt } from 'drizzle-orm';
 import { CreateAuctionDto } from './dto/create-auction.dto';
 import { UpdateAuctionDto } from './dto/update-auction.dto';
 import { AuctionEntity } from './entities/auction.entity';
-import { Auction, auctions } from 'src/common/database/schema';
+import { auctions, bids } from 'src/common/database/schema';
 import { DRIZZLE } from 'src/common/database/drizzle.module';
 import { DrizzleDB } from 'src/common/database/types/drizzle';
 import { CloudinaryService } from 'src/common/cloudinary/cloudinary.service';
@@ -32,6 +32,7 @@ export class AuctionService {
   ) {
     const now = new Date();
     const nowStr = dayjs(now).format('DD/MM/YYYY HH:mm:ss');
+
     const activeAuction = await this.db.query.auctions.findFirst({
       where: (auctions, { and }) =>
         and(eq(auctions.createdBy, userId), gt(auctions.endTime, nowStr)),
@@ -47,8 +48,6 @@ export class AuctionService {
       true,
     ).toDate();
     const endDate = dayjs(dto.endTime, 'DD/MM/YYYY HH:mm:ss', true).toDate();
-    console.log('startTime DTO:', dto.startTime);
-    console.log('endTime DTO:', dto.endTime);
 
     if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
       throw new BadRequestException(
@@ -117,6 +116,33 @@ export class AuctionService {
     return rows.map((row) => new AuctionEntity(row));
   }
 
+  async getMyAuctionItems(userId: number): Promise<AuctionEntity[]> {
+    const rows = await this.db
+      .select()
+      .from(auctions)
+      .where(eq(auctions.createdBy, userId));
+    return rows.map((row) => new AuctionEntity(row));
+  }
+
+  async getAuctionDetails(id: number) {
+    const auction = await this.db.query.auctions.findFirst({
+      where: eq(auctions.id, id),
+    });
+
+    if (!auction) throw new NotFoundException('Auction not found');
+
+    const bidList = await this.db
+      .select()
+      .from(bids)
+      .where(eq(bids.auctionId, id));
+
+    const bidders = bidList.sort((a, b) => b.amount - a.amount);
+    return {
+      auctionItem: new AuctionEntity(auction),
+      bidders,
+    };
+  }
+
   async getAuctionById(id: number): Promise<AuctionEntity> {
     const row = await this.db.query.auctions.findFirst({
       where: eq(auctions.id, id),
@@ -136,11 +162,10 @@ export class AuctionService {
     if (!startDate.isValid() || !endDate.isValid()) {
       throw new BadRequestException('Invalid date format');
     }
-    
+
     const [updated] = await this.db
       .update(auctions)
-      .set({
-        ...dto,
+      .set({  // User can only update date-time 
         startTime: startDate.format('DD/MM/YYYY HH:mm:ss'),
         endTime: endDate.format('DD/MM/YYYY HH:mm:ss'),
       })

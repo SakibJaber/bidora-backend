@@ -61,7 +61,6 @@ export class CreateAuctionDto {
   @IsDate()
   endTime: Date;
 
-
   @IsString()
   @IsNotEmpty()
   imagePublicId: string;
@@ -69,9 +68,6 @@ export class CreateAuctionDto {
   @IsString()
   @IsNotEmpty()
   imageUrl: string;
-
-  // @IsNumber()
-  // createdBy: number;
 
   @IsNumber()
   @IsOptional()
