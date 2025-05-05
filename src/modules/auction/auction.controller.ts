@@ -10,6 +10,7 @@ import {
   UploadedFile,
   UseInterceptors,
   UseGuards,
+  Request,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuctionService } from './auction.service';
@@ -18,10 +19,19 @@ import { CreateAuctionDto } from './dto/create-auction.dto';
 import { UpdateAuctionDto } from './dto/update-auction.dto';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { JwtAuthGuard } from 'src/common/guards/jwt.guard';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { Role } from 'src/common/utils/enums/role.enum';
+import { RolesGuard } from 'src/common/guards/roles.guard';
 
 @Controller('auctions')
 export class AuctionController {
   constructor(private readonly auctionService: AuctionService) {}
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  getMe(@Request() req) {
+    return req.user;
+  }
 
   @UseGuards(JwtAuthGuard)
   @Post()
@@ -67,5 +77,17 @@ export class AuctionController {
   @Delete(':id')
   delete(@Param('id', ParseIntPipe) id: number) {
     return this.auctionService.deleteAuction(id);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.AUCTIONEER)
+  @Put(':id/republish')
+  republish(
+    @CurrentUser('sub') userId: number,
+    @Param('id', ParseIntPipe) id: number,
+    @Body()
+    dto: { startTime: string; endTime: string; commissionCalculated: boolean },
+  ) {
+    return this.auctionService.republishAuction(id, dto, userId);
   }
 }

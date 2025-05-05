@@ -67,6 +67,10 @@ export class AuctionService {
       );
     }
 
+    if (dayjs(endDate).diff(startDate, 'minute') < 60) {
+      throw new BadRequestException('Auction must last at least 1 hour.');
+    }
+
     let imagePublicId = '';
     let imageUrl = '';
 
@@ -165,7 +169,8 @@ export class AuctionService {
 
     const [updated] = await this.db
       .update(auctions)
-      .set({  // User can only update date-time 
+      .set({
+        // User can only update date-time
         startTime: startDate.format('DD/MM/YYYY HH:mm:ss'),
         endTime: endDate.format('DD/MM/YYYY HH:mm:ss'),
       })
@@ -183,5 +188,59 @@ export class AuctionService {
       throw new NotFoundException('Auction not found');
 
     return { message: 'Auction deleted successfully' };
+  }
+
+  async republishAuction(
+    id: number,
+    dto: { startTime: string; endTime: string; commissionCalculated: boolean },
+    userId: number,
+  ) {
+    const auction = await this.db.query.auctions.findFirst({
+      where: eq(auctions.id, id),
+    });
+
+    if (!auction) {
+      throw new NotFoundException('Auction not found');
+    }
+
+    if (auction.createdBy !== userId) {
+      throw new BadRequestException('Unauthorized to republish this auction');
+    }
+
+    const now = new Date();
+    const nowStr = dayjs(now).format('DD/MM/YYYY HH:mm:ss');
+
+    const startDate = dayjs(dto.startTime, 'DD/MM/YYYY HH:mm:ss', true);
+    const endDate = dayjs(dto.endTime, 'DD/MM/YYYY HH:mm:ss', true);
+
+    if (!startDate.isValid() || !endDate.isValid()) {
+      throw new BadRequestException(
+        'Invalid date format. Use DD/MM/YYYY HH:mm:ss',
+      );
+    }
+
+    if (startDate.toDate() <= now) {
+      throw new BadRequestException('Start time must be in the future.');
+    }
+
+    if (startDate.isAfter(endDate)) {
+      throw new BadRequestException('Start time must be before end time.');
+    }
+
+    const [updated] = await this.db
+      .update(auctions)
+      .set({
+        startTime: startDate.format('DD/MM/YYYY HH:mm:ss'),
+        endTime: endDate.format('DD/MM/YYYY HH:mm:ss'),
+        commissionCalculated: false, // reset commission if applicable
+      } as any)
+      .where(eq(auctions.id, id))
+      .returning();
+
+    if (!updated) {
+      throw new InternalServerErrorException('Failed to republish auction');
+    }
+
+    return new AuctionEntity(updated);
   }
 }

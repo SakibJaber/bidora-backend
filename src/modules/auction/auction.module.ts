@@ -5,8 +5,8 @@ import { DrizzleModule } from 'src/common/database/drizzle.module';
 import { CloudinaryService } from 'src/common/cloudinary/cloudinary.service';
 
 @Module({
-  imports: [DrizzleModule],
+  imports: [DrizzleModule, ],
   controllers: [AuctionController],
-  providers: [AuctionService, CloudinaryService],
+  providers: [AuctionService, CloudinaryService, ],
 })
 export class AuctionModule {}

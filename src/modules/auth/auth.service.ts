@@ -121,12 +121,21 @@ export class AuthService {
   }
 
   private async getTokens(userId: number) {
-    const payload = { sub: userId };
+    const user = await this.db.query.users.findFirst({
+      where: eq(users.id, userId),
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const payload = { sub: userId, role: user.role };
 
     const [accessToken, refreshToken] = await Promise.all([
       this.jwt.signAsync(payload, {
         secret: this.config.get<string>('JWT_ACCESS_SECRET'),
         expiresIn: this.config.get<string>('JWT_ACCESS_EXPIRES_IN'),
+        algorithm: 'HS256',
       }),
       this.jwt.signAsync(payload, {
         secret: this.config.get<string>('JWT_REFRESH_SECRET'),
