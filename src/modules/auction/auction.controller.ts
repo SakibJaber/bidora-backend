@@ -22,18 +22,13 @@ import { JwtAuthGuard } from 'src/common/guards/jwt.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from 'src/common/utils/enums/role.enum';
 import { RolesGuard } from 'src/common/guards/roles.guard';
+import { CommissionGuard } from 'src/common/guards/commission.guard';
 
 @Controller('auctions')
 export class AuctionController {
   constructor(private readonly auctionService: AuctionService) {}
 
-  @UseGuards(JwtAuthGuard)
-  @Get('me')
-  getMe(@Request() req) {
-    return req.user;
-  }
-
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, CommissionGuard)
   @Post()
   @UseInterceptors(
     FileInterceptor('image', {

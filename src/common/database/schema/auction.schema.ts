@@ -22,8 +22,6 @@ export const auctions = pgTable('auctions', {
   currentBid: integer('current_bid').default(0),
   startTime: varchar('start_time', { length: 50 }).notNull(),
   endTime: varchar('end_time', { length: 50 }).notNull(),
-  // startTime: timestamp('start_time', { withTimezone: true }),
-  // endTime: timestamp('end_time', { withTimezone: true }),
   imagePublicId: varchar('image_public_id', { length: 255 }).notNull(),
   imageUrl: varchar('image_url', { length: 255 }).notNull(),
   createdBy: integer('created_by').notNull(),

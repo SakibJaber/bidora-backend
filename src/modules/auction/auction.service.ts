@@ -207,9 +207,22 @@ export class AuctionService {
       throw new BadRequestException('Unauthorized to republish this auction');
     }
 
-    const now = new Date();
-    const nowStr = dayjs(now).format('DD/MM/YYYY HH:mm:ss');
+    //  Prevent republishing if auction is already active
+    const auctionEndTime = dayjs(auction.endTime, 'DD/MM/YYYY HH:mm:ss', true);
 
+    if (!auctionEndTime.isValid()) {
+      throw new InternalServerErrorException(
+        'Stored auction end time is invalid.',
+      );
+    }
+
+    if (auctionEndTime.isAfter(dayjs())) {
+      throw new BadRequestException(
+        'Auction is already active, cannot republish.',
+      );
+    }
+
+    const now = new Date();
     const startDate = dayjs(dto.startTime, 'DD/MM/YYYY HH:mm:ss', true);
     const endDate = dayjs(dto.endTime, 'DD/MM/YYYY HH:mm:ss', true);
 
@@ -227,12 +240,18 @@ export class AuctionService {
       throw new BadRequestException('Start time must be before end time.');
     }
 
+    // Ensure end time is at least 1 hour after start time
+    if (endDate.diff(startDate, 'hour', true) < 1) {
+      throw new BadRequestException(
+        'End time must be at least 1 hour after start time.',
+      );
+    }
     const [updated] = await this.db
       .update(auctions)
       .set({
         startTime: startDate.format('DD/MM/YYYY HH:mm:ss'),
         endTime: endDate.format('DD/MM/YYYY HH:mm:ss'),
-        commissionCalculated: false, // reset commission if applicable
+        commissionCalculated: dto.commissionCalculated,
       } as any)
       .where(eq(auctions.id, id))
       .returning();
@@ -240,7 +259,6 @@ export class AuctionService {
     if (!updated) {
       throw new InternalServerErrorException('Failed to republish auction');
     }
-
     return new AuctionEntity(updated);
   }
 }
