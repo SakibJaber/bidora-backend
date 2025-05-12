@@ -34,7 +34,12 @@ export class AuthService {
 
     const [user] = await this.db
       .insert(users)
-      .values({ ...dto, password: hash } as User)
+      .values({
+        ...dto,
+        password: hash,
+        profileImagePublicId: '',
+        profileImageUrl: '',
+      } as User)
       .returning();
 
     const tokens = await this.getTokens(user.id);

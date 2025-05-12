@@ -10,5 +10,6 @@ import { CloudinaryModule } from "src/common/cloudinary/cloudinary.module";
   imports: [DrizzleModule,CloudinaryModule],
   controllers: [UserController],
   providers: [UserService],
+  exports: [UserService],
 })
 export class UserModule {}

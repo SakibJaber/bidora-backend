@@ -28,7 +28,8 @@ import { CommissionGuard } from 'src/common/guards/commission.guard';
 export class AuctionController {
   constructor(private readonly auctionService: AuctionService) {}
 
-  @UseGuards(JwtAuthGuard, CommissionGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, CommissionGuard)
+  @Roles(Role.AUCTIONEER)
   @Post()
   @UseInterceptors(
     FileInterceptor('image', {

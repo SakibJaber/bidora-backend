@@ -48,13 +48,13 @@ export class UserService {
   }
 
   async updateUserProfile(
-    id: number,
+    userId: number,
     dto: UserProfileDto,
     image?: Express.Multer.File,
   ) {
     // Get the existing user first to check their role
     const existingUser = await this.db.query.users.findFirst({
-      where: eq(users.id, id),
+      where: eq(users.id, userId),
     });
 
     if (!existingUser) throw new NotFoundException('User not found');
@@ -63,7 +63,7 @@ export class UserService {
     if (existingUser.role === 'Bidder') {
       if (dto.paymentMethods) {
         this.logger.warn(
-          `Bidder with ID ${id} tried to update payment methods`,
+          `Bidder with ID ${userId} tried to update payment methods`,
         );
       }
       dto.paymentMethods = undefined;
@@ -87,9 +87,8 @@ export class UserService {
         profileImageUrl: dto.profileImageUrl,
         profileImagePublicId: dto.profileImagePublicId,
         paymentMethods: dto.paymentMethods as any,
-        role: dto.role,
       } as Partial<any>)
-      .where(eq(users.id, id))
+      .where(eq(users.id, userId))
       .returning();
 
     if (!updated) throw new NotFoundException('User not found');

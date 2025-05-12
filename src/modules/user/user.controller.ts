@@ -1,8 +1,6 @@
 import {
-  BadRequestException,
   Body,
   Controller,
-  DefaultValuePipe,
   Delete,
   Get,
   Logger,
@@ -19,6 +17,10 @@ import * as multer from 'multer';
 import { UserProfileDto } from './dto/update-profile.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from 'src/common/guards/jwt.guard';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import { RolesGuard } from 'src/common/guards/roles.guard';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { Role } from 'src/common/utils/enums/role.enum';
 
 @Controller('users')
 export class UserController {
@@ -43,20 +45,21 @@ export class UserController {
     return this.userService.getUserById(id);
   }
 
-  @Put(':id/profile')
+  @UseGuards(JwtAuthGuard)
+  @Put('profile')
   @UseInterceptors(
-    FileInterceptor('image', {
-      storage: multer.memoryStorage(),
-    }),
+    FileInterceptor('image', { storage: multer.memoryStorage() }),
   )
   async updateProfile(
-    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser('sub') userId: number,
     @Body() dto: UserProfileDto,
-    @UploadedFile() image?: Express.Multer.File,
+    @UploadedFile() image: Express.Multer.File,
   ) {
-    return this.userService.updateUserProfile(id, dto, image);
+    return this.userService.updateUserProfile(userId, dto, image);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPER_ADMIN)
   @Delete(':id')
   delete(@Param('id', ParseIntPipe) id: number) {
     return this.userService.deleteUser(id);

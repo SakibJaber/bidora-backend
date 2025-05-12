@@ -8,8 +8,8 @@ CREATE TABLE "auctions" (
 	"category" varchar(100) NOT NULL,
 	"condition" "condition" NOT NULL,
 	"current_bid" integer DEFAULT 0,
-	"start_time" timestamp with time zone,
-	"end_time" timestamp with time zone,
+	"start_time" varchar(50) NOT NULL,
+	"end_time" varchar(50) NOT NULL,
 	"image_public_id" varchar(255) NOT NULL,
 	"image_url" varchar(255) NOT NULL,
 	"created_by" integer NOT NULL,
@@ -39,10 +39,11 @@ CREATE TABLE "commissions" (
 CREATE TABLE "payment_proofs" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"user_id" integer NOT NULL,
+	"auction_id" integer NOT NULL,
 	"image_public_id" varchar(255) NOT NULL,
 	"image_url" varchar(255) NOT NULL,
 	"status" varchar DEFAULT 'Pending',
-	"amount" integer,
+	"amount" numeric(10, 2) NOT NULL,
 	"comment" varchar(1000),
 	"uploaded_at" timestamp with time zone DEFAULT now()
 );
@@ -53,12 +54,12 @@ CREATE TABLE "users" (
 	"password" varchar(255) NOT NULL,
 	"email" varchar(255) NOT NULL,
 	"address" varchar(255),
-	"phone" varchar(11) NOT NULL,
+	"phone" varchar(11),
 	"profile_image_public_id" varchar(255) NOT NULL,
 	"profile_image_url" varchar(255) NOT NULL,
 	"payment_methods" jsonb DEFAULT '{}'::jsonb,
 	"role" "role" DEFAULT 'Bidder',
-	"unpaid_commission" numeric DEFAULT '0',
+	"unpaid_commission" integer DEFAULT 0 NOT NULL,
 	"auctions_won" numeric DEFAULT '0',
 	"money_spent" numeric DEFAULT '0',
 	"refresh_token" varchar(500),
@@ -68,4 +69,5 @@ CREATE TABLE "users" (
 ALTER TABLE "bids" ADD CONSTRAINT "bids_auction_id_auctions_id_fk" FOREIGN KEY ("auction_id") REFERENCES "public"."auctions"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "bids" ADD CONSTRAINT "bids_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "commissions" ADD CONSTRAINT "commissions_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "payment_proofs" ADD CONSTRAINT "payment_proofs_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "payment_proofs" ADD CONSTRAINT "payment_proofs_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "payment_proofs" ADD CONSTRAINT "payment_proofs_auction_id_auctions_id_fk" FOREIGN KEY ("auction_id") REFERENCES "public"."auctions"("id") ON DELETE no action ON UPDATE no action;

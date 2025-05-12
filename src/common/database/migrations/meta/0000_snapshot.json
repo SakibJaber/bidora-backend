@@ -1,5 +1,5 @@
 {
-  "id": "7da72878-5ad0-479c-8e5e-8e2e6572905b",
+  "id": "6519a336-a385-4d20-8366-83d4b5c6aafb",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -54,15 +54,15 @@
         },
         "start_time": {
           "name": "start_time",
-          "type": "timestamp with time zone",
+          "type": "varchar(50)",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "end_time": {
           "name": "end_time",
-          "type": "timestamp with time zone",
+          "type": "varchar(50)",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "image_public_id": {
           "name": "image_public_id",
@@ -269,6 +269,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "auction_id": {
+          "name": "auction_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
         "image_public_id": {
           "name": "image_public_id",
           "type": "varchar(255)",
@@ -290,9 +296,9 @@
         },
         "amount": {
           "name": "amount",
-          "type": "integer",
+          "type": "numeric(10, 2)",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "comment": {
           "name": "comment",
@@ -316,6 +322,19 @@
           "tableTo": "users",
           "columnsFrom": [
             "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "payment_proofs_auction_id_auctions_id_fk": {
+          "name": "payment_proofs_auction_id_auctions_id_fk",
+          "tableFrom": "payment_proofs",
+          "tableTo": "auctions",
+          "columnsFrom": [
+            "auction_id"
           ],
           "columnsTo": [
             "id"
@@ -368,7 +387,7 @@
           "name": "phone",
           "type": "varchar(11)",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "profile_image_public_id": {
           "name": "profile_image_public_id",
@@ -399,10 +418,10 @@
         },
         "unpaid_commission": {
           "name": "unpaid_commission",
-          "type": "numeric",
+          "type": "integer",
           "primaryKey": false,
-          "notNull": false,
-          "default": "'0'"
+          "notNull": true,
+          "default": 0
         },
         "auctions_won": {
           "name": "auctions_won",

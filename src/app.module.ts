@@ -8,6 +8,7 @@ import { DrizzleModule } from './common/database/drizzle.module';
 import { DomainModule } from './modules/domain.module';
 import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './common/guards/roles.guard';
+import { EmailModule } from './common/utils/email/email.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { RolesGuard } from './common/guards/roles.guard';
     }),
     DrizzleModule,
     DomainModule,
+    EmailModule,
   ],
   controllers: [AppController],
   providers: [AppService],
