@@ -1,22 +1,25 @@
-// src/email/email.module.ts
 import { Module } from '@nestjs/common';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { EmailService } from './email.service';
+import { ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
-    MailerModule.forRoot({
-      transport: {
-        host: process.env.SMTP_HOST, // e.g., 'smtp.gmail.com'
-        port: parseInt(process.env.SMTP_PORT, 10), // e.g., 587
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
+    MailerModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        transport: {
+          service: 'gmail',
+          auth: {
+            user: config.get<string>('SMTP_USER'),
+            pass: config.get<string>('SMTP_PASS'),
+          },
         },
-      },
-      defaults: {
-        from: '"Zeeshu Auction Team" <no-reply@zeeshuauction.com>',
-      },
+        defaults: {
+          from: '"Zeeshu Auction Team" <no-reply@zeeshuauction.com>',
+          //     from: 'techandtech360@gmail.com',
+        },
+      }),
     }),
   ],
   providers: [EmailService],

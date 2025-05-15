@@ -158,7 +158,7 @@ export class PaymentProofService {
   async createPaymentProof(
     userId: number,
     dto: CreatePaymentProofDto,
-    // image: Express.Multer.File,
+    image: Express.Multer.File,
   ): Promise<PaymentProofEntity> {
     this.logger.log(`Creating payment proof for user ${userId}`);
     this.logger.debug(`Raw DTO: ${JSON.stringify(dto)}`);
@@ -197,11 +197,11 @@ export class PaymentProofService {
           `Amount must equal the auction’s commission: ${commission.toFixed(2)}`,
         );
   
-      // if (!image?.buffer)
-      //   throw new BadRequestException('Image is required');
-      // const uploaded = await this.cloudinary.uploadFile(image, 'payment_proofs');
-      // if (!uploaded?.public_id || !uploaded?.secure_url)
-      //   throw new BadRequestException('Image upload failed');
+      if (!image?.buffer)
+        throw new BadRequestException('Image is required');
+      const uploaded = await this.cloudinary.uploadFile(image, 'payment_proofs');
+      if (!uploaded?.public_id || !uploaded?.secure_url)
+        throw new BadRequestException('Image upload failed');
   
       this.logger.debug(
         `Inserting payment proof: userId=${userId} (type: ${typeof userId}), auctionId=${dto.auctionId} (type: ${typeof dto.auctionId}), amount=${roundedAmount} (type: ${typeof roundedAmount})`,
@@ -211,8 +211,8 @@ export class PaymentProofService {
         .values({
           userId,
           auctionId: dto.auctionId,
-          imagePublicId: 'uploaded.public_id',
-          imageUrl: 'uploaded.secure_url',
+          imagePublicId: uploaded.public_id,
+          imageUrl: uploaded.secure_url,
           amount: roundedAmount,
           comment: dto.comment,
           status: 'Pending',

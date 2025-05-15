@@ -32,7 +32,7 @@ CREATE TABLE "bids" (
 CREATE TABLE "commissions" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"user_id" integer NOT NULL,
-	"amount" integer NOT NULL,
+	"amount" numeric(10, 2) NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint

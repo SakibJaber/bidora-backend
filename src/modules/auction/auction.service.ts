@@ -6,11 +6,11 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { eq, gt } from 'drizzle-orm';
+import { eq, gt, sql } from 'drizzle-orm';
 import { CreateAuctionDto } from './dto/create-auction.dto';
 import { UpdateAuctionDto } from './dto/update-auction.dto';
 import { AuctionEntity } from './entities/auction.entity';
-import { auctions, bids } from 'src/common/database/schema';
+import { auctions, bids, users } from 'src/common/database/schema';
 import { DRIZZLE } from 'src/common/database/drizzle.module';
 import { DrizzleDB } from 'src/common/database/types/drizzle';
 import { CloudinaryService } from 'src/common/cloudinary/cloudinary.service';
@@ -260,5 +260,91 @@ export class AuctionService {
       throw new InternalServerErrorException('Failed to republish auction');
     }
     return new AuctionEntity(updated);
+  }
+
+  async closeAuction(id: number): Promise<{ message: string; winner?: AuctionEntity }> {
+    return this.db.transaction(async (tx) => {
+      // Fetch the auction
+      const auction = await tx.query.auctions.findFirst({
+        where: eq(auctions.id, id),
+      });
+
+      if (!auction) {
+        throw new NotFoundException('Auction not found');
+      }
+
+      // Check if auction has already been processed
+      if (auction.commissionCalculated) {
+        throw new BadRequestException('Auction has already been closed');
+      }
+
+      // Parse endTime to verify auction has ended
+      const endTime = dayjs(auction.endTime, 'DD/MM/YYYY HH:mm:ss', true);
+      if (!endTime.isValid()) {
+        throw new BadRequestException('Invalid auction end time format');
+      }
+
+      if (endTime.isAfter(dayjs())) {
+        throw new BadRequestException('Auction has not yet ended');
+      }
+
+      // Find the highest bid
+      const highestBid = await tx
+        .select({
+          userId: bids.userId,
+          amount: sql`MAX(${bids.amount})`,
+        })
+        .from(bids)
+        .where(eq(bids.auctionId, id))
+        .groupBy(bids.userId)
+        .orderBy(sql`MAX(${bids.amount}) DESC`)
+        .limit(1);
+
+      if (!highestBid.length) {
+        // No bids, mark auction as closed
+        await tx
+          .update(auctions)
+          .set({ commissionCalculated: true })
+          .where(eq(auctions.id, id));
+        return { message: 'Auction closed with no bids' };
+      }
+
+      const winnerId = highestBid[0].userId;
+      const winningAmount = Number(highestBid[0].amount);
+
+      // Update auction with highest bidder and mark as closed
+      const [updatedAuction] = await tx
+        .update(auctions)
+        .set({
+          highestBidderId: winnerId,
+          currentBid: winningAmount,
+          commissionCalculated: true,
+        })
+        .where(eq(auctions.id, id))
+        .returning();
+
+      if (!updatedAuction) {
+        throw new InternalServerErrorException('Failed to update auction');
+      }
+
+      // Update user's auctionsWon and moneySpent
+      const [updatedUser] = await tx
+        .update(users)
+        .set({
+          auctionsWon: sql`${users.auctionsWon} + 1`,
+          moneySpent: sql`${users.moneySpent} + ${winningAmount}`,
+        })
+        .where(eq(users.id, winnerId))
+        .returning();
+
+      if (!updatedUser) {
+        throw new InternalServerErrorException('Failed to update user');
+      }
+
+      return {
+        message: 'Auction closed successfully',
+        winner: new AuctionEntity(updatedAuction),
+      };
+    });
   }
 }

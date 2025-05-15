@@ -38,15 +38,15 @@ export class PaymentProofController {
   @UseGuards(JwtAuthGuard)
   @Post()
   // @UsePipes(new ValidationPipe({ transform: true }))
-  // @UseInterceptors(
-  //   FileInterceptor('image', {
-  //     storage: multer.memoryStorage(),
-  //   }),
-  // )
+  @UseInterceptors(
+    FileInterceptor('image', {
+      storage: multer.memoryStorage(),
+    }),
+  )
   async create(
     @CurrentUser('sub') userId: number,
     @Body() dto: CreatePaymentProofDto,
-    // @UploadedFile() image?: Express.Multer.File,
+    @UploadedFile() image?: Express.Multer.File,
   ) {
     this.logger.log(
       `Creating payment proof for user ${userId}, auction ${dto.auctionId}, amount ${dto.amount}`,
@@ -56,7 +56,7 @@ export class PaymentProofController {
     const paymentProof = await this.paymentProofService.createPaymentProof(
       userId,
       dto,
-      // image,
+      image,
     );
     return {
       success: true,

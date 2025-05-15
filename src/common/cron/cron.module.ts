@@ -6,6 +6,7 @@ import { UserModule } from 'src/modules/user/user.module';
 import { EmailModule } from '../utils/email/email.module';
 import { CronService } from './cron.service';
 import { DrizzleModule } from '../database/drizzle.module';
+import { BidModule } from 'src/modules/bid/bid.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { DrizzleModule } from '../database/drizzle.module';
     DrizzleModule,
     PaymentProofModule,
     UserModule,
+    BidModule,
     EmailModule,
   ],
   providers: [CronService],

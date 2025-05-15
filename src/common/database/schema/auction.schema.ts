@@ -25,7 +25,7 @@ export const auctions = pgTable('auctions', {
   imagePublicId: varchar('image_public_id', { length: 255 }).notNull(),
   imageUrl: varchar('image_url', { length: 255 }).notNull(),
   createdBy: integer('created_by').notNull(),
-  highestBidderId: integer('highest_bidder_id'),
+  highestBidderId: integer('highest_bidder_id').notNull(),
   commissionCalculated: boolean('commission_calculated').default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),

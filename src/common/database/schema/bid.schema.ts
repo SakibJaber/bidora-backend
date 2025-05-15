@@ -25,6 +25,4 @@ export const bids = pgTable('bids', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
 
-
-
 export type InsertBid = InferInsertModel<typeof bids>;
